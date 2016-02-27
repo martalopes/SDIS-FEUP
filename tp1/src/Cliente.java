@@ -14,6 +14,13 @@ public class Cliente {
 		InetAddress address = InetAddress.getByName(args[0]);
 		DatagramPacket packet = new DatagramPacket(sbuf, sbuf.length, address, 4445);
 		socket.send(packet);
+		
+		byte[] buf = new byte[256];
+		packet = new DatagramPacket(buf, buf.length);
+		socket.receive(packet);
+		String response = new String(packet.getData(), 0, packet.getLength());
+		System.out.println("RECEIVED: " + response);
+		
 		socket.close();
 	}
 }
