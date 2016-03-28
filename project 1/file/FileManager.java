@@ -20,8 +20,6 @@ public class FileManager {
 		FileOutputStream out = new FileOutputStream(folderName + "/" + chunkID.toString());
 		out.write(data, 0, data.length);
 		out.close();
-		
-		Peer.addChunk(chunkID.toString());
 	}
 	
 	public static byte[] loadChunk(ChunkID chunkID) throws FileNotFoundException {
@@ -59,6 +57,7 @@ public class FileManager {
 		File file = new File(folderName + "/" + chunkID);
 		long length = file.length();
 		file.delete();
+		Peer.removeChunk(chunkID);
 		return length;
 	}
 	

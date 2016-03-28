@@ -2,6 +2,7 @@ package protocols;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import chunk.ChunkID;
 import file.FileManager;
 import peer.Peer;
 
@@ -22,6 +23,10 @@ public class Reclaim implements Runnable {
 		while (reclaimedSpace < spaceToReclaim && i < storedChunks.size()) {
 			String chunk = storedChunks.get(i);
 			reclaimedSpace += FileManager.deleteChunk(chunk);
+			String[] chunkTokens = chunk.split("-");
+			String fileID = chunkTokens[0];
+			String chunkNo = chunkTokens[1];
+			Peer.getMcListener().removePeerFromChunk(new ChunkID(fileID, Integer.parseInt(chunkNo)), Peer.getId());
 			try {
 				Protocol.sendREMOVED(chunk);
 			} catch (IOException e) {

@@ -35,6 +35,7 @@ public class Peer {
 	private static Protocol protocol;
 	
 	private static ArrayList<String> storedChunks = new ArrayList<String>();
+	private static ArrayList<Integer> chunksRepDegree = new ArrayList<Integer>();
 	private static ArrayList<String> ownedFiles = new ArrayList<String>();
 
 	public static Protocol getProtocol() {
@@ -42,6 +43,11 @@ public class Peer {
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
+		if (args.length != 1) {
+			System.out.println("Usage: Peer <peerID>");
+			return;
+		}
+		
 		id = Integer.parseInt(args[0]);
 		System.out.println("Opening peer with ID " + id);
 		
@@ -131,8 +137,15 @@ public class Peer {
 		return storedChunks;
 	}
 	
-	public static void addChunk(String chunkID) {
+	public static void addChunk(String chunkID, int repDegree) {
 		storedChunks.add(chunkID);
+		chunksRepDegree.add(repDegree);
+	}
+	
+	public static void removeChunk(String chunkID) {
+		int index = storedChunks.indexOf(chunkID);
+		storedChunks.remove(chunkID);
+		chunksRepDegree.remove(index);
 	}
 	
 	public static void addOwnedFile(String fileID) {
@@ -142,6 +155,25 @@ public class Peer {
 	
 	public static boolean hasFile(String fileID) {
 		return ownedFiles.contains(fileID);
+	}
+	
+	public static boolean repDegreeIsBelowDesired(String chunkID, int actualRepDegree) {
+		if (!storedChunks.contains(chunkID))
+			return false;
+		
+		int index = storedChunks.indexOf(chunkID);
+		if (actualRepDegree < chunksRepDegree.get(index)) {
+			return true;
+		} else
+			return false;
+	}
+	
+	public static int getRepDegree(String chunkID) {
+		if (!storedChunks.contains(chunkID))
+			return 0;
+		
+		int index = storedChunks.indexOf(chunkID);
+		return chunksRepDegree.get(index);
 	}
 
 	public static ArrayList<String> getChunksFromFile(String fileID) {

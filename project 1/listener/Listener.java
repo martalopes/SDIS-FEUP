@@ -84,6 +84,13 @@ public class Listener implements Runnable {
 		}
 	}
 	
+	public synchronized int getActualRepDegree(ChunkID chunkID) {
+		if (storedNo.containsKey(chunkID.toString()))
+			return storedNo.get(chunkID.toString()).size();
+		else
+			return 0;
+	}
+	
 	public synchronized void addChunksToSave(ChunkID chunkID) {
 		chunksToSave.add(chunkID.toString());
 	}
@@ -101,11 +108,13 @@ public class Listener implements Runnable {
 	}
 	
 	public synchronized boolean stopSaveCHUNKS(ChunkID chunkID) {
-		return chunksAlreadySent.remove(chunkID.toString());
+		boolean sent = chunksAlreadySent.get(chunkID.toString());
+		chunksAlreadySent.remove(chunkID.toString());
+		return sent;
 	}
 	
 	public synchronized void addToSentChunks(ChunkID chunkID) {
-		if (chunksAlreadySent.containsKey(chunkID))
+		if (chunksAlreadySent.containsKey(chunkID.toString()))
 			chunksAlreadySent.put(chunkID.toString(), true);
 	}
 

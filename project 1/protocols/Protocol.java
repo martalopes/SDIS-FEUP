@@ -22,8 +22,13 @@ public class Protocol implements Runnable {
 	
 	Random random = new Random();
 	private DatagramPacket packet;
+	
+	private String expectedChunk;
+	private boolean receivedExpectedChunk;
 
 	public Protocol(DatagramPacket packet) {
+		expectedChunk = null;
+		receivedExpectedChunk = false;
 		this.packet = packet;
 		message = new String(packet.getData(), 0, packet.getLength());
 		getHeader();
@@ -63,12 +68,16 @@ public class Protocol implements Runnable {
 	private void handlePUTCHUNK() {
 		System.out.println("Received PUTCHUNK");
 		ChunkID chunkID = new ChunkID(headerTokens[3], Integer.parseInt(headerTokens[4]));
+		if (expectedChunk != null && expectedChunk.equals(chunkID.toString()))
+			receivedExpectedChunk = true;
 		try {
 			Thread.sleep(random.nextInt(400));
-			if (Peer.getMcListener().getNoStoreds(chunkID) < Integer.parseInt(headerTokens[5])) {
+			if (Peer.getMcListener().getNoStoreds(chunkID) < Integer.parseInt(headerTokens[5]) && !Peer.hasFile(headerTokens[3])) {
 				System.out.println("Storing chunk with ID " + chunkID);
 				sendSTORED(chunkID);
 				getBody();
+				Peer.getMcListener().addStored(chunkID, Peer.getId());
+				Peer.addChunk(chunkID.toString(), Integer.parseInt(headerTokens[5]));
 				FileManager.saveChunk(chunkID, body);
 			}
 		} catch (IOException | InterruptedException e) {
@@ -102,6 +111,7 @@ public class Protocol implements Runnable {
 				try {
 					byte[] data = FileManager.loadChunk(chunkID);
 					Chunk chunk = new Chunk(chunkID.getFileID(), chunkID.getChunkNo(), 0, data);
+					Peer.getMdrListener().addToSentChunks(chunkID);
 					System.out.println("Sending chunk with ID " + chunkID);
 					sendCHUNK(chunk);
 				} catch (IOException e) {
@@ -114,14 +124,15 @@ public class Protocol implements Runnable {
 	
 	private void handleCHUNK() {
 		ChunkID chunkID = new ChunkID(headerTokens[3], Integer.parseInt(headerTokens[4]));
-		System.out.println("Received CHUNK with ID " + chunkID);
+		System.out.println("Received CHUNK with ID " + chunkID + " from peer " + headerTokens[2]);
 		
 		if (Peer.getMdrListener().savingChunksOf(chunkID)) {
 			System.out.println("Saving chunk with ID " + chunkID);
 			getBody();
 			Chunk chunk = new Chunk(chunkID.getFileID(), chunkID.getChunkNo(), 0, body);
 			Restore.addChunk(chunk);
-		} else
+		}
+		else
 			Peer.getMdrListener().addToSentChunks(chunkID);
 	}
 	
@@ -139,6 +150,27 @@ public class Protocol implements Runnable {
 		ChunkID chunkID = new ChunkID(headerTokens[3], Integer.parseInt(headerTokens[4]));
 		System.out.println("Received REMOVE from peer " + peerID + " for chunk with ID " + chunkID);
 		Peer.getMcListener().removePeerFromChunk(chunkID, peerID);
+		
+		if (Peer.repDegreeIsBelowDesired(chunkID.toString(), Peer.getMcListener().getActualRepDegree(chunkID))) {
+			expectedChunk = chunkID.toString();
+			try {
+				Thread.sleep(random.nextInt(400));
+				if (!receivedExpectedChunk) {
+					try {
+						byte[] data = FileManager.loadChunk(chunkID);
+						Chunk chunk = new Chunk(chunkID.getFileID(), chunkID.getChunkNo(), Peer.getRepDegree(chunkID.toString()), data);
+						System.out.println("Replication degree is below desired; sending chunk with ID " + chunkID);
+						sendPUTCHUNK(chunk);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			expectedChunk = null;
+			receivedExpectedChunk = false;
+		}
 	}
 	
 	public static void sendPUTCHUNK(Chunk chunk) throws IOException {

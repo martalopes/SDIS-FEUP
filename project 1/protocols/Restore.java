@@ -11,12 +11,12 @@ import peer.Peer;
 public class Restore implements Runnable {
 	
 	private File file;
+	private static ArrayList<Chunk> chunks;
 	
 	public Restore(File file) {
 		this.file = file;
+		chunks = new ArrayList<Chunk>();
 	}
-
-	private static ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 
 	@Override
 	public void run() {
@@ -26,6 +26,7 @@ public class Restore implements Runnable {
 			return;
 		
 		long numChunks = FileManager.getNumChunks(file);
+		
 		for (int i = 0; i < numChunks; i++) {
 			ChunkID chunkID = new ChunkID(FileManager.getFileID(file), i);
 			try {
@@ -65,7 +66,8 @@ public class Restore implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println("Num Chunks: " + numChunks);
+		System.out.println("Chunks size: " + chunks.size());
 		System.out.println("Finished restoring file with ID " + fileID);
 	}
 	
