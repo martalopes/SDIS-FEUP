@@ -228,12 +228,12 @@ public class Protocol implements Runnable {
 	}
 	
 	private synchronized static void sendToMDB(byte[] buf) throws IOException {
-		DatagramPacket packet = new DatagramPacket(buf, buf.length, Peer.getMdbListener().address, Peer.getMcListener().port);
+		DatagramPacket packet = new DatagramPacket(buf, buf.length, Peer.getMdbListener().address, Peer.getMdbListener().port);
 		Peer.getSocket().send(packet);
 	}
 	
 	private synchronized static void sendToMDR(byte[] buf) throws IOException {
-		DatagramPacket packet = new DatagramPacket(buf, buf.length, Peer.getMdrListener().address, Peer.getMcListener().port);
+		DatagramPacket packet = new DatagramPacket(buf, buf.length, Peer.getMdrListener().address, Peer.getMdrListener().port);
 		Peer.getSocket().send(packet);
 	}
 	

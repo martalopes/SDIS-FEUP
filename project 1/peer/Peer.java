@@ -43,22 +43,22 @@ public class Peer {
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		if (args.length != 1) {
-			System.out.println("Usage: Peer <peerID>");
+		if (args.length != 7) {
+			System.out.println("Usage: Peer <peerID> <mc address> <mc port> <mdb address> <mdb port> <mdr address> <mdr port>");
 			return;
 		}
 		
 		id = Integer.parseInt(args[0]);
 		System.out.println("Opening peer with ID " + id);
 		
-		mcAddress = InetAddress.getByName("224.0.0.0");
-		mcPort = 8000;
+		mcAddress = InetAddress.getByName(args[1]);
+		mcPort = Integer.parseInt(args[2]);
 
-		mdbAddress = InetAddress.getByName("224.0.0.0");
-		mdbPort = 8001;
+		mdbAddress = InetAddress.getByName(args[3]);
+		mdbPort = Integer.parseInt(args[4]);
 
-		mdrAddress = InetAddress.getByName("224.0.0.0");
-		mdrPort = 8002;
+		mdrAddress = InetAddress.getByName(args[5]);
+		mdrPort = Integer.parseInt(args[6]);
 		
 		mcListener = new Listener(mcAddress, mcPort);
 		mdbListener = new Listener(mdbAddress, mdbPort);

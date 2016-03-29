@@ -37,10 +37,14 @@ public class Restore implements Runnable {
 			}
 		}
 		
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
+		int k = 0;
+		while (chunks.size() < numChunks && k < 100) {
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			k++;
 		}
 		
 		byte[] fileData = new byte[0];
@@ -57,8 +61,8 @@ public class Restore implements Runnable {
 			
 			if (chunkI == null)
 				System.out.println("Missing chunk no " + i);
-
-			fileData = Protocol.joinBytes(fileData, chunkI.getData());
+			else
+				fileData = Protocol.joinBytes(fileData, chunkI.getData());
 		}
 		
 		try {
@@ -66,8 +70,7 @@ public class Restore implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Num Chunks: " + numChunks);
-		System.out.println("Chunks size: " + chunks.size());
+
 		System.out.println("Finished restoring file with ID " + fileID);
 	}
 	
